@@ -28,11 +28,13 @@ namespace WeatherInfoApi.Controllers
             try
             {
                 string searchLocationByTextUrl = _weatherInfoConfig.SearchLocationByTextUrl;
-                string url = searchLocationByTextUrl.Replace("{location}", query);
+                string url = searchLocationByTextUrl
+                    .Replace("{location}", query)
+                    .Replace("{ApiKey}", _weatherInfoConfig.ApiKey);
+
                 var httpRequestMessage = new HttpRequestMessage(
                     HttpMethod.Get,
                     url);
-
 
                 HttpClient httpClient = _httpClientFactory.CreateClient();
                 var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
@@ -46,9 +48,44 @@ namespace WeatherInfoApi.Controllers
             } catch(Exception ex)
             {
                 _logger.LogError(ex, "SearchLocationByText");
+                throw;
             }
 
             return Array.Empty<LocationModel>();
+        }
+
+        [HttpGet("WeatherInfo/{lat}/{lon}")]
+        public async Task<WeatherInfoModel> WeatherInfo(string lat, string lon)
+        {
+            try
+            {
+                string weatherInfoUrl = _weatherInfoConfig.WeatherInfoUrl;
+                string url = weatherInfoUrl
+                    .Replace("{lat}", lat)
+                    .Replace("{lon}", lon)
+                    .Replace("{ApiKey}", _weatherInfoConfig.ApiKey);
+
+                var httpRequestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    url);
+
+                HttpClient httpClient = _httpClientFactory.CreateClient();
+                var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
+                if (httpResponseMessage.IsSuccessStatusCode)
+                {
+                    string content = await httpResponseMessage.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<WeatherInfoModel>(content);
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SearchLocationByText");
+                throw;
+            }
+
+            return new WeatherInfoModel();
         }
     }
 }
