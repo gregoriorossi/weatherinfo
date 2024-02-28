@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
+using WeatherInfoApi.Models;
 
 namespace WeatherInfoApi.Controllers
 {
@@ -6,28 +8,47 @@ namespace WeatherInfoApi.Controllers
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase
     {
-        private static readonly string[] Summaries = new[]
-        {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-    };
-
+        private readonly WeatherInfoConfig _weatherInfoConfig = new WeatherInfoConfig();
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<WeatherForecastController> _logger;
 
-        public WeatherForecastController(ILogger<WeatherForecastController> logger)
+        public WeatherForecastController(
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory,
+            ILogger<WeatherForecastController> logger)
         {
+            configuration.GetSection(WeatherInfoConfig.WeatherInfo).Bind(_weatherInfoConfig);
+            _httpClientFactory = httpClientFactory;
             _logger = logger;
         }
 
-        [HttpGet(Name = "GetWeatherForecast")]
-        public IEnumerable<WeatherForecast> Get()
+        [HttpGet("SearchLocationByText/{query}")]
+        public async Task<IEnumerable<LocationModel>> SearchLocationByText(string query)
         {
-            return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+            try
             {
-                Date = DateTime.Now.AddDays(index),
-                TemperatureC = Random.Shared.Next(-20, 55),
-                Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-            })
-            .ToArray();
+                string searchLocationByTextUrl = _weatherInfoConfig.SearchLocationByTextUrl;
+                string url = searchLocationByTextUrl.Replace("{location}", query);
+                var httpRequestMessage = new HttpRequestMessage(
+                    HttpMethod.Get,
+                    url);
+
+
+                HttpClient httpClient = _httpClientFactory.CreateClient();
+                var httpResponseMessage = await httpClient.SendAsync(httpRequestMessage);
+                if (httpResponseMessage.IsSuccessStatusCode)
+                {
+                    string content = await httpResponseMessage.Content.ReadAsStringAsync();
+                    var result = JsonSerializer.Deserialize<IEnumerable<LocationModel>>(content);
+
+                    return result;
+                }
+            } catch(Exception ex)
+            {
+                _logger.LogError(ex, "SearchLocationByText");
+            }
+
+            return Array.Empty<LocationModel>();
         }
     }
 }
