@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { ChangeEvent } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import { Typeahead } from 'react-bootstrap-typeahead';
 import { ISearchLocationByTextResponse, ISearchResultModel } from '../models/weatherInfo.models';
 
 
@@ -10,16 +9,17 @@ type SearchBoxState = {
 export class SearchBox extends Component<{}, SearchBoxState> {
 
 	componentWillMount() {
-		this.setState({
-			Results: []
-		});
+		this.resetResults();
 	}
 
-	onTextInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+	onTextInputChange = (location: string): void => {
 
-		const text: string = e.target.value;
+		if (!location) {
+			this.resetResults();
+			return;
+		}
 		const url = 'https://localhost:7177/weatherForecast/searchlocationBytext/{text}'
-			.replace('{text}', text);
+			.replace('{text}', location);
 
 		fetch(url)
 			.then((response) => response.json())
@@ -30,6 +30,10 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 			.catch((err) => {
 				console.log(err.message);
 			});
+	}
+
+	onTypeaheadChange = (e: any): void => {
+		console.log(e);
 	}
 
 	private buildResults(response: ISearchLocationByTextResponse[]): void {
@@ -46,18 +50,41 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 		});
 	}
 
+	onSuggestionSelected = (selected: any): void => {
+		console.log("on suggestion selected", selected);
+	}
+
+	resetResults = ():void => {
+		this.setState({
+			Results: []
+		});
+	}
+
+	handleClick = (e: any) => {
+		// console.log("handle click", e);
+	}
+
+	renderMenuItemChildren = (option: any) => {
+		// console.log("renderMenuItem", option);
+		return <div onClick={(e) => this.handleClick(e)}>
+			{option.Text}
+		</div>
+	}
 
 	render() {
 		return (
-			<Form className="d-flex" >
-				<Form.Control
-					type="search"
-					placeholder="Search"
-					onChange={this.onTextInputChange}
-					className="me-2"
-					aria-label="Search" />
-				<Button variant="outline-success">Search</Button>
-			</Form>
+			<div>
+				<Typeahead
+					id="searchlocation-input"
+					onChange={this.onTypeaheadChange}
+					onInputChange={this.onTextInputChange}
+					labelKey="Text"
+					placeholder="Choose a location"
+					options={this.state.Results}
+					renderMenuItemChildren={this.renderMenuItemChildren}>
+				</Typeahead>
+			</div>
+			
 		);
 	}
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Component } from 'react';
-import './App.css';
+import './App.css'; 
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 import { Header } from './components/header';
 import { SearchBox } from './components/searchbox';
 
