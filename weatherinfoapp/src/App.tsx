@@ -10,6 +10,7 @@ import { container } from "./ioc";
 import { WeatherInfo } from "./components/weatherinfo";
 import { FavoriteLocations } from "./components/favorite-locations";
 import { IWeatherInfoResponse } from "./models/weatherInfo.models";
+import EventEmitter from "events";
 
 type AppState = {
     weatherInfo?: IWeatherInfoResponse;
@@ -17,15 +18,21 @@ type AppState = {
 
 export class App extends Component<{}, AppState> {
 
+    private shouldUpdateFavoritesEmitter = new EventEmitter();
+
     componentWillMount() {
         this.setState({
         });
     }
 
-    OnLocationSelected = (location: IWeatherInfoResponse) => {
+    OnLocationSelected = (location: IWeatherInfoResponse): void => {
         this.setState({
             weatherInfo: location
         });
+    }
+
+    OnFavoriteLocationsUpdated = (): void => {
+        this.shouldUpdateFavoritesEmitter.emit("updateFavorites");
     }
 
     render() {
@@ -39,12 +46,16 @@ export class App extends Component<{}, AppState> {
                     <div className="row">
                         <div className="col-md-8 col-sm-12">
                             {this.state.weatherInfo ?
-                                <WeatherInfo Info={this.state.weatherInfo}></WeatherInfo> :
+                                <WeatherInfo
+                                    key={this.state.weatherInfo.name }
+                                    Info={this.state.weatherInfo}
+                                    OnFavoriteLocationsUpdated={this.OnFavoriteLocationsUpdated}
+                                    ></WeatherInfo> :
                                 <div className="alert alert-warning mt-4">No Location selected</div>
                             }
                         </div>
                         <div className="col-md-4 col-sm-12">
-                            <FavoriteLocations></FavoriteLocations>
+                            <FavoriteLocations ShouldUpdate={this.shouldUpdateFavoritesEmitter}></FavoriteLocations>
                         </div>
                     </div>
                 </div>

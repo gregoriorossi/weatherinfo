@@ -31,10 +31,7 @@ export class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
 		const locationsResult = await this.weatherInfoService.SearchLocation(location);
 		this.setState({
 			Results: locationsResult
-		});
-		console.log("weather info", locationsResult);
-
-		
+		});		
 	}
 
 	onTypeaheadChange = async (options: any[]): Promise<void> => {
@@ -60,7 +57,7 @@ export class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
 
 	renderMenuItemChildren = (option: any) => {
 		return <div>
-			{option.Text}
+			{option.Text} ({option.Region})
 		</div>
 	}
 
