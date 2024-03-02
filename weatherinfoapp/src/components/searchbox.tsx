@@ -2,63 +2,48 @@ import { resolve } from 'inversify-react';
 import React, { Component } from 'react';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import { IWeatherInfoService } from '../models/services.models';
-import { ISearchLocationByTextResponse, ISearchResultModel } from '../models/weatherInfo.models';
+import { ISearchResultModel, IWeatherInfoResultModel } from '../models/weatherInfo.models';
 
 
 type SearchBoxState = {
 	Results: ISearchResultModel[];
 }
+
 export class SearchBox extends Component<{}, SearchBoxState> {
 
 	@resolve("WeatherInfoService") private weatherInfoService!: IWeatherInfoService;
 
-	async componentWillMount() {
+	componentWillMount() {
 		this.resetResults();
-
-		const result = await this.weatherInfoService.SearchLocation("gfdfdsds");
-		console.log("weather info", result);
 	}
 
-	onTextInputChange = (location: string): void => {
+	onTextInputChange = async (location: string): Promise<void> => {
 
 		if (!location) {
 			this.resetResults();
 			return;
 		}
-		const url = process.env.REACT_APP_SEARCH_LOCATION_BY_TEXT_URL!
-			.replace('{text}', location);
 
-		fetch(url)
-			.then((response) => response.json())
-			.then((data: ISearchLocationByTextResponse[]) => {
-				console.log(data);
-				this.buildResults(data);
-			})
-			.catch((err) => {
-				console.log(err.message);
-			});
-	}
-
-	onTypeaheadChange = (e: any): void => {
-		console.log(e);
-	}
-
-	private buildResults(response: ISearchLocationByTextResponse[]): void {
-
-		const result: ISearchResultModel[] = response.map((x): ISearchResultModel => ({
-			Text: x.name,
-			IsFavorite: false,
-			Lat: x.lat,
-			Long: x.lon
-		}));
-
+		const locationsResult = await this.weatherInfoService.SearchLocation(location);
 		this.setState({
-			Results: result
+			Results: locationsResult
 		});
+		console.log("weather info", locationsResult);
+
+		
 	}
 
-	onSuggestionSelected = (selected: any): void => {
-		console.log("on suggestion selected", selected);
+	onTypeaheadChange = async (options: any[]): Promise<void> => {
+		if (!options.length) {
+			return;
+		}
+
+		const option = options[0] as ISearchResultModel;
+		const lat: number = option.Lat;
+		const lon: number = option.Long;
+
+		const weatherInfoResult: IWeatherInfoResultModel|null = await this.weatherInfoService.WeatherInfo(lat, lon);
+		console.log(weatherInfoResult);
 	}
 
 	resetResults = ():void => {

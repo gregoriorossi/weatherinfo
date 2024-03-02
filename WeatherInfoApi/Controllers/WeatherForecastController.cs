@@ -23,7 +23,7 @@ namespace WeatherInfoApi.Controllers
         }
 
         [HttpGet("SearchLocationByText/{query}")]
-        public async Task<IEnumerable<LocationModel>> SearchLocationByText(string query)
+        public async Task<IEnumerable<LocationDTO>> SearchLocationByText(string query)
         {
             try
             {
@@ -43,7 +43,7 @@ namespace WeatherInfoApi.Controllers
                     string content = await httpResponseMessage.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<IEnumerable<LocationModel>>(content);
 
-                    return result;
+                    return result.Select(x => new LocationDTO(x));
                 }
             } catch(Exception ex)
             {
@@ -51,11 +51,11 @@ namespace WeatherInfoApi.Controllers
                 throw;
             }
 
-            return Array.Empty<LocationModel>();
+            return Array.Empty<LocationDTO>();
         }
 
         [HttpGet("WeatherInfo/{lat}/{lon}")]
-        public async Task<WeatherInfoModel> WeatherInfo(string lat, string lon)
+        public async Task<WeatherInfoDTO> WeatherInfo(string lat, string lon)
         {
             try
             {
@@ -76,7 +76,7 @@ namespace WeatherInfoApi.Controllers
                     string content = await httpResponseMessage.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<WeatherInfoModel>(content);
 
-                    return result;
+                    return new WeatherInfoDTO(result);
                 }
             }
             catch (Exception ex)
@@ -85,7 +85,7 @@ namespace WeatherInfoApi.Controllers
                 throw;
             }
 
-            return new WeatherInfoModel();
+            return new WeatherInfoDTO();
         }
     }
 }

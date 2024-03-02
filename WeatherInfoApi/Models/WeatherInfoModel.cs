@@ -62,6 +62,4 @@
         public double gust { get; set; }
         public double speed { get; set; }
     }
-
-
 }
