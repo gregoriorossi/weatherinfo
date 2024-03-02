@@ -57,7 +57,7 @@ export class FavoriteLocationsService implements IFavoriteLocationsService {
     }
 
     private BuildKey(location: IWeatherInfoResponse): string {
-        return `${location.name}${location.coordinates.lat}${location.coordinates.lon}`;
+        return `${location.name}${location.country}`;
     }
 
     private GetFavoriteLocationsFromCookie = (): IFavoriteLocation[] => {
