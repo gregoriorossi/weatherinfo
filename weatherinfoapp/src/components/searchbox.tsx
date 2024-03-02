@@ -9,7 +9,11 @@ type SearchBoxState = {
 	Results: ISearchResultModel[];
 }
 
-export class SearchBox extends Component<{}, SearchBoxState> {
+type SearchBoxProps = {
+	OnLocationSelected: (location: IWeatherInfoResultModel) => void;
+}
+
+export class SearchBox extends Component<SearchBoxProps, SearchBoxState> {
 
 	@resolve("WeatherInfoService") private weatherInfoService!: IWeatherInfoService;
 
@@ -43,7 +47,9 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 		const lon: number = option.Long;
 
 		const weatherInfoResult: IWeatherInfoResultModel|null = await this.weatherInfoService.WeatherInfo(lat, lon);
-		console.log(weatherInfoResult);
+		if (weatherInfoResult) {
+			this.props.OnLocationSelected(weatherInfoResult);
+		}
 	}
 
 	resetResults = ():void => {
@@ -60,7 +66,7 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 
 	render() {
 		return (
-			<div>
+			<div className="mt-2">
 				<Typeahead
 					id="searchlocation-input"
 					onChange={this.onTypeaheadChange}
