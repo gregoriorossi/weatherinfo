@@ -1,5 +1,7 @@
+import { resolve } from 'inversify-react';
 import React, { Component } from 'react';
 import { Typeahead } from 'react-bootstrap-typeahead';
+import { IWeatherInfoService } from '../models/services.models';
 import { ISearchLocationByTextResponse, ISearchResultModel } from '../models/weatherInfo.models';
 
 
@@ -8,8 +10,13 @@ type SearchBoxState = {
 }
 export class SearchBox extends Component<{}, SearchBoxState> {
 
-	componentWillMount() {
+	@resolve("WeatherInfoService") private weatherInfoService!: IWeatherInfoService;
+
+	async componentWillMount() {
 		this.resetResults();
+
+		const result = await this.weatherInfoService.SearchLocation("gfdfdsds");
+		console.log("weather info", result);
 	}
 
 	onTextInputChange = (location: string): void => {
@@ -18,7 +25,7 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 			this.resetResults();
 			return;
 		}
-		const url = 'https://localhost:7177/weatherForecast/searchlocationBytext/{text}'
+		const url = process.env.REACT_APP_SEARCH_LOCATION_BY_TEXT_URL!
 			.replace('{text}', location);
 
 		fetch(url)
@@ -60,13 +67,8 @@ export class SearchBox extends Component<{}, SearchBoxState> {
 		});
 	}
 
-	handleClick = (e: any) => {
-		// console.log("handle click", e);
-	}
-
 	renderMenuItemChildren = (option: any) => {
-		// console.log("renderMenuItem", option);
-		return <div onClick={(e) => this.handleClick(e)}>
+		return <div>
 			{option.Text}
 		</div>
 	}
